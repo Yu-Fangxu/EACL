@@ -10,8 +10,8 @@ class HybridLossOutput:
     cl_loss:torch.Tensor = None
     sentiment_representations:torch.Tensor = None
     sentiment_labels:torch.Tensor = None
-    sentiment_prototypes:torch.Tensor = None
-    prototype_labels:torch.Tensor = None
+    sentiment_anchortypes:torch.Tensor = None
+    anchortype_labels:torch.Tensor = None
     max_cosine:torch.Tensor = None
 
 def loss_function(log_prob, reps, label, mask, model):
@@ -24,8 +24,8 @@ def loss_function(log_prob, reps, label, mask, model):
         cl_loss=cl_loss.loss,
         sentiment_representations=cl_loss.sentiment_representations,
         sentiment_labels=cl_loss.sentiment_labels,
-        sentiment_prototypes=cl_loss.sentiment_prototypes,
-        prototype_labels=cl_loss.prototype_labels,
+        sentiment_anchortypes=cl_loss.sentiment_anchortypes,
+        anchortype_labels=cl_loss.anchortype_labels,
         max_cosine = cl_loss.max_cosine
     ) 
 
@@ -45,8 +45,8 @@ class SupConOutput:
     loss:torch.Tensor = None
     sentiment_representations:torch.Tensor = None
     sentiment_labels:torch.Tensor = None
-    sentiment_prototypes:torch.Tensor = None
-    prototype_labels:torch.Tensor = None
+    sentiment_anchortypes:torch.Tensor = None
+    anchortype_labels:torch.Tensor = None
     max_cosine:torch.Tensor = None
 
 
@@ -56,13 +56,13 @@ class SupConLoss(nn.Module):
         self.temperature = args.temp
         self.eps = 1e-8
         if args.dataset_name == "IEMOCAP":
-            self.emo_anchor = torch.load(f"{args.proto_path}/iemocap_emo.pt")
+            self.emo_anchor = torch.load(f"{args.anchor_path}/iemocap_emo.pt")
             self.emo_label = torch.tensor([0, 1, 2, 3, 4, 5])
         elif args.dataset_name == "MELD":
-            self.emo_anchor = torch.load(f"{args.proto_path}/meld_emo.pt")
+            self.emo_anchor = torch.load(f"{args.anchor_path}/meld_emo.pt")
             self.emo_label = torch.tensor([0, 1, 2, 3, 4, 5, 6])
         elif args.dataset_name == "EmoryNLP":
-            self.emo_anchor = torch.load(f"{args.proto_path}/emorynlp_emo.pt")
+            self.emo_anchor = torch.load(f"{args.anchor_path}/emorynlp_emo.pt")
             self.emo_label = torch.tensor([0, 1, 2, 3, 4, 5, 6])
         self.sim = nn.functional.cosine_similarity(self.emo_anchor.unsqueeze(1), self.emo_anchor.unsqueeze(0), dim=2)
         self.args = args
@@ -78,11 +78,11 @@ class SupConLoss(nn.Module):
         if return_representations:
             sentiment_labels = labels
             sentiment_representations = reps.detach()
-            sentiment_prototypes = emo_anchor.detach()
+            sentiment_anchortypes = emo_anchor.detach()
         else:
             sentiment_labels = None
             sentiment_representations = None
-            sentiment_prototypes = None
+            sentiment_anchortypes = None
         if self.args.disable_emo_anchor:
             concated_reps = reps
             concated_labels = labels
@@ -124,8 +124,8 @@ class SupConLoss(nn.Module):
             loss=loss,
             sentiment_representations=sentiment_representations,
             sentiment_labels=sentiment_labels,
-            sentiment_prototypes=sentiment_prototypes,
-            prototype_labels=self.emo_label,
+            sentiment_anchortypes=sentiment_anchortypes,
+            anchortype_labels=self.emo_label,
             max_cosine = max_cosine
         )
     
