@@ -115,14 +115,13 @@ def get_parser():
     parser.add_argument("--ignore_prompt_prefix", action="store_true", default=True)
     parser.add_argument("--disable_training_progress_bar", action="store_true")
     parser.add_argument("--mapping_lower_dim", type=int, default=1024)
-    parser.add_argument("--disable_prototype", action="store_true")
 
     # ablation study
-    parser.add_argument("--disable_emo_proto", action='store_true')
+    parser.add_argument("--disable_emo_anchor", action='store_true')
     parser.add_argument("--use_nearest_neighbour", action="store_true")
     parser.add_argument("--disable_two_stage_training", action="store_true")
     parser.add_argument("--stage_two_lr", default=1e-4, type=float)
-    parser.add_argument("--proto_path", type=str)
+    parser.add_argument("--anchor_path", type=str)
     
     # analysis
     parser.add_argument("--save_stage_two_cache", action="store_true")
@@ -188,7 +187,7 @@ if __name__ == '__main__':
 
     best_model = copy.deepcopy(model)
     best_test_fscore = 0
-    proto_dist = []
+    anchor_dist = []
     for e in range(n_epochs):
         start_time = time.time()
         
@@ -228,7 +227,7 @@ if __name__ == '__main__':
         torch.cuda.empty_cache()
         # laod best 
         with torch.no_grad():
-            protos = model.map_function(model.emo_proto)
+            anchors = model.map_function(model.emo_anchor)
             model.load_state_dict(torch.load(path + args.dataset_name + '/model_' + '.pkl'))
             model.eval()
             emb_train, emb_val, emb_test = [] ,[] ,[]
@@ -241,7 +240,7 @@ if __name__ == '__main__':
                 label = label.to(device)
                 if args.fp16:
                     with torch.autocast(device_type="cuda" if args.cuda else "cpu"):
-                        log_prob, masked_mapped_output, masked_outputs, proto_scores = model(input_ids, return_mask_output=True) 
+                        log_prob, masked_mapped_output, masked_outputs, anchor_scores = model(input_ids, return_mask_output=True) 
                 emb_train.append(masked_mapped_output.detach().cpu())
                 label_train.append(label.cpu())
             emb_train = torch.cat(emb_train, dim=0)
@@ -254,7 +253,7 @@ if __name__ == '__main__':
                 label = label.to(device)
                 if args.fp16:
                     with torch.autocast(device_type="cuda" if args.cuda else "cpu"):
-                        log_prob, masked_mapped_output, masked_outputs, proto_scores = model(input_ids, return_mask_output=True) 
+                        log_prob, masked_mapped_output, masked_outputs, anchor_scores = model(input_ids, return_mask_output=True) 
                 emb_val.append(masked_mapped_output.detach().cpu())
                 label_val.append(label.cpu())
             emb_val = torch.cat(emb_val, dim=0)
@@ -267,7 +266,7 @@ if __name__ == '__main__':
                 label = label.to(device)
                 if args.fp16:
                     with torch.autocast(device_type="cuda" if args.cuda else "cpu"):
-                        log_prob, masked_mapped_output, masked_outputs, proto_scores = model(input_ids, return_mask_output=True) 
+                        log_prob, masked_mapped_output, masked_outputs, anchor_scores = model(input_ids, return_mask_output=True) 
                 emb_test.append(masked_mapped_output.detach().cpu())
                 label_test.append(label.cpu())
             emb_test = torch.cat(emb_test, dim=0)
@@ -284,8 +283,8 @@ if __name__ == '__main__':
         test_loader = DataLoader(testset, batch_size=64, shuffle=False, num_workers=8)
         if args.save_stage_two_cache:
             os.makedirs("cache", exist_ok=True)
-            pickle.dump([train_loader, valid_loader, test_loader, protos], open(f"./cache/{args.dataset_name}.pkl", 'wb'))
-        clf = Classifier(args, protos).to(device)
+            pickle.dump([train_loader, valid_loader, test_loader, anchors], open(f"./cache/{args.dataset_name}.pkl", 'wb'))
+        clf = Classifier(args, anchors).to(device)
         optimizer = torch.optim.Adam(clf.parameters(), lr=args.stage_two_lr, weight_decay=args.weight_decay)
         best_valid_score = 0
         for e in range(10):
