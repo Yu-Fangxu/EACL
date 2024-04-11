@@ -11,7 +11,7 @@ mkdir -p "./emo_anchors/${dir_name}"
 
 python src/generate_anchors.py --bert_path $model_path
 
-CUDA_VISIBLE_DEVICES=4 python src/run.py --proto_path "./emo_anchors/${dir_name}" \
+CUDA_VISIBLE_DEVICES=4 python src/run.py --anchor_path "./emo_anchors/${dir_name}" \
                                          --bert_path $model_path \
                                          --dataset_name $dataset \
                                          --ce_loss_weight $ce_loss_weight \
