@@ -28,12 +28,12 @@ def train_or_eval_model(model, loss_function, dataloader, epoch, device, args, o
 
         if args.fp16:
             with torch.autocast(device_type="cuda" if args.cuda else "cpu"):
-                loss, loss_output, log_prob, label, mask, proto_scores = _forward(model, loss_function, input_orig, input_aug, label, device)
+                loss, loss_output, log_prob, label, mask, anchor_scores = _forward(model, loss_function, input_orig, input_aug, label, device)
         else:
-            loss, loss_output, log_prob, label, mask, proto_scores = _forward(model, loss_function, input_orig, input_aug, label, device)
+            loss, loss_output, log_prob, label, mask, anchor_scores = _forward(model, loss_function, input_orig, input_aug, label, device)
 
         if args.use_nearest_neighbour:
-            pred = torch.argmax(proto_scores[mask], dim=-1)
+            pred = torch.argmax(anchor_scores[mask], dim=-1)
         else:
             pred = torch.argmax(log_prob[mask], dim = -1)
 
@@ -107,15 +107,15 @@ def _forward(model, loss_function, input_orig, input_aug, label, device):
     mask = torch.ones(len(input_orig)).to(device)
     mask = mask > 0.5
     if model.training:
-        log_prob, masked_mapped_output, _, proto_scores = model(input_ids, return_mask_output=True) 
+        log_prob, masked_mapped_output, _, anchor_scores = model(input_ids, return_mask_output=True) 
         loss_output = loss_function(log_prob, masked_mapped_output, label, mask, model)
     else:
         with torch.no_grad():
-            log_prob, masked_mapped_output, _, proto_scores = model(input_ids, return_mask_output=True) 
+            log_prob, masked_mapped_output, _, anchor_scores = model(input_ids, return_mask_output=True) 
             loss_output = loss_function(log_prob, masked_mapped_output, label, mask, model)
     loss = loss_output.ce_loss * model.args.ce_loss_weight + (1 - model.args.ce_loss_weight) * loss_output.cl_loss
 
-    return loss, loss_output, log_prob, label[mask], mask, proto_scores
+    return loss, loss_output, log_prob, label[mask], mask, anchor_scores
 
 def retrain(model, loss_function, dataloader, epoch, device, args, optimizer=None, lr_scheduler=None, train=False):
     losses, ce_losses, preds, labels = [], [], [], [], []
@@ -148,7 +148,7 @@ def retrain(model, loss_function, dataloader, epoch, device, args, optimizer=Non
                     new_preds.append(preds[i][j].cpu().item())
     else:
         return float('nan'), float('nan'), [], [], float('nan'), [], [], [], [], []
-        # plot_representations(sentiment_representations, sentiment_labels, sentiment_prototypes, prototype_labels)
+        # plot_representations(sentiment_representations, sentiment_labels, sentiment_anchortypes, anchortype_labels)
     avg_loss = round(np.sum(losses) / len(losses), 4)
     avg_ce_loss = round(np.sum(ce_losses) / len(ce_losses), 4)
     avg_accuracy = round(accuracy_score(new_labels, new_preds) * 100, 2)
