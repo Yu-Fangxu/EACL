@@ -21,14 +21,24 @@ git clone https://github.com/Yu-Fangxu/EACL.git
 
 **2) Setup Environment**
 
+We recommend creating a new environment:
+```bash
+conda create -n EACL python==3.10
+conda activate EACL
+```
+
+Then install all the dependencies:
+```
+pip install -r requirements.txt
+```
 
 **3) Run Command for EACL**
 
 ```
-bash run.sh IEMOCAP/MELD/EmoryNLP
+bash run.sh IEMOCAP|MELD|EmoryNLP 'princeton-nlp/sup-simcse-roberta-large'|'YuxinJiang/sup-promcse-roberta-large'|'microsoft/deberta-large'
 ```
 
-You could choose one dataset from IEMOCAP / MELD / EmoryNLP.
+You could choose one dataset from IEMOCAP | MELD | EmoryNLP, and replace Sim-CSE with Promcse or Deberta
 
 <br> **If you find our repository helpful to your research, please consider citing:** <br>
 ```
