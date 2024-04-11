@@ -38,7 +38,7 @@ pip install -r requirements.txt
 bash run.sh IEMOCAP|MELD|EmoryNLP 'princeton-nlp/sup-simcse-roberta-large'|'YuxinJiang/sup-promcse-roberta-large'|'microsoft/deberta-large'
 ```
 
-You could choose one dataset from IEMOCAP | MELD | EmoryNLP, and replace Sim-CSE with Promcse or Deberta
+You could choose one dataset from IEMOCAP | MELD | EmoryNLP, and choose one base model from SimCSE | PromCSE | Deberta
 
 <br> **If you find our repository helpful to your research, please consider citing:** <br>
 ```
