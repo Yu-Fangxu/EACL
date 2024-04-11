@@ -34,13 +34,13 @@ class CLModel(nn.Module):
         self.tokenizer = tokenizer
 
         if args.dataset_name == "IEMOCAP":
-            self.emo_proto = torch.load(f"{args.proto_path}/iemocap_emo.pt").to(self.device)
+            self.emo_anchor = torch.load(f"{args.anchor_path}/iemocap_emo.pt").to(self.device)
             self.emo_label = torch.tensor([0, 1, 2, 3, 4, 5]).to(self.device)
         elif args.dataset_name == "MELD":
-            self.emo_proto = torch.load(f"{args.proto_path}/meld_emo.pt").to(self.device)
+            self.emo_anchor = torch.load(f"{args.anchor_path}/meld_emo.pt").to(self.device)
             self.emo_label = torch.tensor([0, 1, 2, 3, 4, 5, 6])
         elif args.dataset_name == "EmoryNLP":
-            self.emo_proto = torch.load(f"{args.proto_path}/emorynlp_emo.pt").to(self.device)
+            self.emo_anchor = torch.load(f"{args.anchor_path}/emorynlp_emo.pt").to(self.device)
             self.emo_label = torch.tensor([0, 1, 2, 3, 4, 5, 6]).to(self.device)
 
     def device(self):
@@ -64,23 +64,23 @@ class CLModel(nn.Module):
         feature = torch.dropout(mask_outputs, self.dropout, train=self.training)
         feature = self.predictor(feature)
         if self.args.use_nearest_neighbour:
-            anchors = self.map_function(self.emo_proto)
+            anchors = self.map_function(self.emo_anchor)
 
-            self.last_emo_proto = anchors
-            proto_scores = self.score_func(mask_mapped_outputs.unsqueeze(1), anchors.unsqueeze(0))
+            self.last_emo_anchor = anchors
+            anchor_scores = self.score_func(mask_mapped_outputs.unsqueeze(1), anchors.unsqueeze(0))
             
         else:
-            proto_scores = None
-        return feature, mask_mapped_outputs, mask_outputs, proto_scores
+            anchor_scores = None
+        return feature, mask_mapped_outputs, mask_outputs, anchor_scores
     
     def forward(self, sentences, return_mask_output=False):
         '''
         generate vector representations for each turn of conversation
         '''
-        feature, mask_mapped_outputs, mask_outputs, proto_scores = self._forward(sentences)
+        feature, mask_mapped_outputs, mask_outputs, anchor_scores = self._forward(sentences)
         
         if return_mask_output:
-            return feature, mask_mapped_outputs, mask_outputs, proto_scores
+            return feature, mask_mapped_outputs, mask_outputs, anchor_scores
         else:
             return feature
         
