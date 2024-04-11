@@ -69,7 +69,7 @@ class SupConLoss(nn.Module):
     def score_func(self, x, y):
         return (1 + F.cosine_similarity(x, y, dim=-1))/2 + self.eps
     
-    def forward(self, reps, labels, model, decoupled=False, return_representations=False):
+    def forward(self, reps, labels, model, return_representations=False):
         device = reps.device
         batch_size = reps.shape[0]
         self.emo_proto = self.emo_proto.to(device)
