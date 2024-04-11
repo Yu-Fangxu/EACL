@@ -27,7 +27,6 @@ class CLModel(nn.Module):
         self.num_classes = n_classes
         self.pad_value = args.pad_value
         self.mask_value = 50265
-        # self.chg_value = tokenizer("<chg>")['input_ids'][1]
         self.f_context_encoder = AutoModel.from_pretrained(args.bert_path)
         
         num_embeddings, self.dim = self.f_context_encoder.embeddings.word_embeddings.weight.data.shape
@@ -40,11 +39,6 @@ class CLModel(nn.Module):
             # nn.Linear(self.dim, self.dim),
             # nn.ReLU(),
             nn.Linear(self.dim, self.num_classes)
-        )
-        self.chg_predictor = nn.Sequential(
-            nn.Linear(self.dim, self.dim),
-            nn.ReLU(),
-            nn.Linear(self.dim, 2)
         )
         self.map_function = nn.Sequential(
             nn.Linear(self.dim, self.dim),
