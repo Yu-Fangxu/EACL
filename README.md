@@ -24,7 +24,11 @@ git clone https://github.com/Yu-Fangxu/EACL.git
 
 **3) Run Command for EACL**
 
+```
 bash run.sh IEMOCAP/MELD/EmoryNLP
+```
+
+You could choose one dataset from IEMOCAP / MELD / EmoryNLP.
 
 <br> **If you find our repository helpful to your research, please consider citing:** <br>
 ```
