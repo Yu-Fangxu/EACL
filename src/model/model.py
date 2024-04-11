@@ -1,23 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import AutoModel
-from sklearn.metrics import euclidean_distances
 import torch.nn.functional as F
-def extract_bert_embeddings(tokenizer, model, text, device):
-    # Tokenize input text
-    inputs = tokenizer(text, return_tensors="pt").to(device)
-    
-    # Forward pass through BERT model
-    with torch.no_grad():
-        outputs = model(**inputs)
-
-    # Extract last layer hidden states
-    last_hidden_state = outputs.last_hidden_state
-
-    # Average pooling across tokens to get sentence embeddings
-    sentence_embedding = torch.mean(last_hidden_state, dim=1)
-    
-    return sentence_embedding
 
 class CLModel(nn.Module):
     def __init__(self, args, n_classes, tokenizer=None):
@@ -80,10 +64,10 @@ class CLModel(nn.Module):
         feature = torch.dropout(mask_outputs, self.dropout, train=self.training)
         feature = self.predictor(feature)
         if self.args.use_nearest_neighbour:
-            protos = self.map_function(self.emo_proto)
+            anchors = self.map_function(self.emo_proto)
 
-            self.last_emo_proto = protos
-            proto_scores = self.score_func(mask_mapped_outputs.unsqueeze(1), protos.unsqueeze(0))
+            self.last_emo_proto = anchors
+            proto_scores = self.score_func(mask_mapped_outputs.unsqueeze(1), anchors.unsqueeze(0))
             
         else:
             proto_scores = None
@@ -101,9 +85,9 @@ class CLModel(nn.Module):
             return feature
         
 class Classifier(nn.Module):
-    def __init__(self, args, protos) -> None:
+    def __init__(self, args, anchors) -> None:
         super(Classifier, self).__init__()
-        self.weight = nn.Parameter(protos)
+        self.weight = nn.Parameter(anchors)
         self.args = args
     
     def score_func(self, x, y):
