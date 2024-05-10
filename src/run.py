@@ -104,7 +104,7 @@ def get_parser():
 
     parser.add_argument('--dropout', type=float, default=0.1, metavar='dropout', help='dropout rate')
 
-    parser.add_argument('--batch_size', type=int, default=20, metavar='BS', help='batch size')
+    parser.add_argument('--batch_size', type=int, default=64, metavar='BS', help='batch size')
 
     parser.add_argument('--epochs', type=int, default=8, metavar='E', help='number of epochs')
 
