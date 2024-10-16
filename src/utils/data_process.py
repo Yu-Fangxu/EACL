@@ -44,55 +44,6 @@ def get_meld_vocabs(file_paths):
     torch.save(emotion_vocab.to_dict(), "./erc/data/MELD/label_vocab.pkl")
     logging.info('total {} emotions'.format(len(emotion_vocab)))
 
-
-def build_dataset(dialogues, train=False):
-    ret_utterances = []
-    ret_labels = []
-    for dialogue in dialogues:
-        utterance_ids = []
-        query = 'For utterance:'
-        query_ids = tokenizer(query)['input_ids'][1:-1]
-        for idx, turn_data in enumerate(dialogue):
-            text_with_speaker = turn_data['speaker'] + ':' + turn_data['text']
-            token_ids = tokenizer(text_with_speaker)['input_ids'][1:]
-            utterance_ids.append(token_ids)
-            if turn_data['label'] < 0:
-                continue
-            full_context = [CONFIG['CLS']]
-            lidx = 0
-            for lidx in range(idx):
-                total_len = sum([len(item) for item in utterance_ids[lidx:]]) + 8
-                if total_len + len(utterance_ids[idx]) <= CONFIG['max_len']:
-                    break
-            lidx = max(lidx, idx-8)
-            for item in utterance_ids[lidx:]:
-                full_context.extend(item)
-
-            query_idx = idx
-            prompt = dialogue[query_idx]['speaker'] + ' feels <mask>'
-            full_query = query_ids + utterance_ids[query_idx] + tokenizer(prompt)['input_ids'][1:]
-            input_ids = full_context + full_query
-            input_ids = pad_to_len(input_ids, CONFIG['max_len'], CONFIG['pad_value'])
-            ret_utterances.append(input_ids)
-            ret_labels.append(dialogue[query_idx]['label'])
-
-            if train and idx > 3 and torch.rand(1).item() < 0.2:
-                query_idx = random.randint(lidx, idx-1)
-                if dialogue[query_idx]['label'] < 0:
-                    continue
-                prompt = dialogue[query_idx]['speaker'] + ' feels <mask>'
-                full_query = query_ids + utterance_ids[query_idx] + tokenizer(prompt)['input_ids'][1:]
-                input_ids = full_context + full_query
-                input_ids = pad_to_len(input_ids, CONFIG['max_len'], CONFIG['pad_value'])
-                ret_utterances.append(input_ids)
-                ret_labels.append(dialogue[query_idx]['label'])
-            
-    dataset = TensorDataset(
-        torch.LongTensor(ret_utterances),
-        torch.LongTensor(ret_labels)
-    )
-    return dataset
-
 def get_iemocap_vocabs(file_paths):
     emotion_vocab = vocab.Vocab()
     emotion_vocab.word2index('neu', train=True)
