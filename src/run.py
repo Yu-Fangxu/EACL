@@ -200,7 +200,7 @@ if __name__ == '__main__':
             train_or_eval_model(model, loss_function, test_loader, e, device, args)
         all_fscore.append([valid_fscore, test_fscore, test_detail_f1])
 
-        logger.info( 'Epoch: {}, train_loss: {}, train_acc: {}, train_fscore: {}, valid_loss: {}, valid_acc: {}, valid_fscore: {}, test_loss: {}, test_ce_loss:{}, test_cl_loss: {}, test_acc: {}, test_fscore: {}, time: {} sec'. \
+        logger.info( 'Epoch: {}, train_loss: {}, train_acc: {}, train_fscore: {}, valid_loss: {}, valid_acc: {}, valid_fscore: {}, test_loss: {}, test_acc: {}, test_fscore: {}, time: {} sec'. \
             format(e + 1, train_loss, train_acc, train_fscore, valid_loss, valid_acc, valid_fscore, test_loss, test_acc,
             test_fscore, round(time.time() - start_time, 2)))
 
